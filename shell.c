@@ -1,71 +1,63 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include "shell.h"
-extern char **environ;
+#include "main.h"
 
-/*
- * main - imitates functionallity of a shell that takes commands without arguments
- * @ac: count of argumens
- * @av: list of arguments
- * Return: 0 on success, 1 when ot right count of arguments
+/**
+ * main - runs a customized shell
+ * @argc: number of args
+ * @argv: arg values
+ * @env: list of env key pairs
+ * Return: Status
  */
-
-int main(int ac, char **av)
+int main(int argc, char **argv, char **env)
 {
-	size_t size = 0;
-	ssize_t get = 0;
-	char *input = NULL, *argv[3] = {NULL, NULL, NULL};
-	int status, e = 0;
-	pid_t pid;
+	pid_t child_pid;
+	int status, i;
+	char *buffer = NULL, *buffer_copy = NULL, *filename = NULL;
+	size_t bufsize = 0/*, read_chars*/, check = -1;
+	ssize_t read_chars;
+	(void) argc;
 
-	if (ac != 1)
-	{
-		printf("Usage: %s\n", av[0]);
-		return (1);
-	}
+        filename = _strdup(argv[0]);
 	while (1)
 	{
-		printf("#cisfun$ ");
-		get = size = getline(&input, &size, stdin);
+		if (isatty(fileno(stdin)))
+			_puts("($) ");
+		read_chars = bufsize = getline(&buffer, &bufsize, stdin);
+		if (bufsize == check)
+			return (-1);
+		if (_strcompare("exit\n", buffer) == 0 || _strcompare("exit", buffer) == 0)
+		{
+			exit(3);
+		}
+		buffer_copy = malloc(sizeof(char) * (read_chars + 1));
+		if (buffer_copy == NULL)
+		{
+			perror("tsh: memory allocation error");
+			return (-1);
+		}
+		buffer_copy = _strdup(buffer);
+		/*_strcpy(buffer_copy, buffer);*/
+		argv = getargs(buffer, buffer_copy);
 
-		if (get == -1)
+		child_pid = fork();
+		if (child_pid == -1)
 		{
-			printf("\n");
-			break;
+			perror("Error:");
+			return (1);
 		}
-		if (input[size - 1] == '\n')
-		{
-			input[size - 1] = '\0';
-			size--;
-		}
-		if (_strcmp(input, "exit") == 0)
-			break;
-		if (_strcmp(input, "env") == 0)
-		{
-			while (environ[e] != NULL)
-			{
-				printf("%s\n", environ[e]);
-				e++;
-			}
-		}
-		pid = fork();
-
-		if (pid == -1)
-			perror(av[0]);
-		else if(pid == 0)
-		{
-			argv[0] = input;
-			argv[1] = NULL;
-			execve(input, argv, environ);
-			perror(av[0]);
-			exit(1);
-		}
+		if (child_pid == 0)
+			execute(argv, env, filename);
 		else
-			waitpid(pid, &status, 0);
+			wait(&status);
 	}
-	free(input);
+	free(buffer);
+	free(buffer_copy);
+	free(filename);
+
+	if (argv != NULL)
+	{
+		for (i = 0; argv[i] != NULL; i++)
+			free(argv[i]);
+		free(argv);
+	}
 	return (0);
 }
