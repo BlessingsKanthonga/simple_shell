@@ -10,7 +10,7 @@
 
 void execute(char **argv, char **env, char *filename)
 {
-	char *command = NULL, *full_command = NULL;
+	char *command = NULL, *full_command = NULL, str[] = "betty";
 
 	if (argv)
 	{
@@ -22,7 +22,7 @@ void execute(char **argv, char **env, char *filename)
 		}
 		else
 		{
-			if (_strcompare("betty", command) == 0)
+			if (_strcompare(str, command) == 0)
 				full_command =_strdup("/usr/local/bin/betty");
 			else
 				full_command = getcommand(command, env);
@@ -36,16 +36,24 @@ void execute(char **argv, char **env, char *filename)
                         }
                         else
                         {
-                                if (full_command == NULL)
-                                        full_command = command;
+				if (full_command == NULL)
+                                        full_command =_strdup(command);
+				/* verify if full_command is a valid executable */
+				if (access(full_command, X_OK) == -1)
+				{
+					perror("Error:");
+					free(full_command);
+					free(command);
+					return;
+				}
         			/* execute the command wit execve */
 	        		if (execve(full_command, argv, NULL) == -1)
 		        	{
 			        	perror("Error:");
                                 }
 			}
+			free(full_command);
 		}
                 free(command);
-                free(full_command);
 	}
 }

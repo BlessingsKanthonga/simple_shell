@@ -9,8 +9,8 @@
 char *getcommand(char *command, char **env)
 {
 	char *path, *path_copy, *path_token, *file_path;
-	int command_len, dir_len;
-	struct stat st;
+	int command_len, i, dir_len;
+	struct stat st = {0};
 
 	path = _getenv("PATH", env);
 	if (path != NULL)
@@ -22,6 +22,12 @@ char *getcommand(char *command, char **env)
 		{
 			dir_len = _strlen(path_token);
 			file_path = malloc(command_len + dir_len + 2);
+
+			if (file_path != NULL)
+			{
+				for (i = 0; i < command_len + dir_len + 2; i++)
+					file_path[i] = '\0';
+			}
 			_strcpy(file_path, path_token);
 			_strcat(file_path, "/");
 			_strcat(file_path, command);

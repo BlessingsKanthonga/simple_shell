@@ -8,7 +8,7 @@
  */
 char **getargs(char *buffer, char *buffer_copy)
 {
-	int len, i = 0, tokens_num = 0;
+	int len, i, tokens_num = 0;
 	const char del[] = " \n";
 	char *token, **argv;
 
@@ -23,13 +23,14 @@ char **getargs(char *buffer, char *buffer_copy)
 	tokens_num++;
 
 	/* add commands and arguments to argv */
-	argv = malloc(sizeof(char *) * tokens_num);
+	argv = malloc(sizeof(char *) * (tokens_num + 1));
 	token = strtok(buffer_copy, del);
 	for (i = 0; token != NULL; i++)
 	{
 		len = _strlen(token);
-		argv[i] = malloc(sizeof(char) * len);
-		_strcpy(argv[i], token);
+		argv[i] = malloc(sizeof(char) * (len + 1));
+		argv[i] = _strdup(token);
+	/*	_strcpy(argv[i], token);*/
 		token = strtok(NULL, del);
 	}
 	argv[i] = NULL;

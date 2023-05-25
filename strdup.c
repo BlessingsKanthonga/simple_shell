@@ -27,4 +27,5 @@ char *_strdup(char *str)
 	}
 	p[x] = '\0';
 	return (p);
+	free(p);
 }
